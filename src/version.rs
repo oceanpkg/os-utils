@@ -176,6 +176,7 @@ impl OsVersion {
         } else {
             // https://developer.apple.com/documentation/foundation/nsoperatingsystemversion?language=objc
             #[repr(C)]
+            #[allow(dead_code)] // See https://github.com/rust-lang/rust/issues/56750
             struct NSOperatingSystemVersion {
                 major: NSInteger,
                 minor: NSInteger,
