@@ -130,12 +130,12 @@ impl Version {
                 }
 
                 // Available in Obj-C as of macOS 10.10+
-                let version: NSOperatingSystemVersion = unsafe {
+                let NSOperatingSystemVersion { major, minor, patch } = unsafe {
                     let proc_info = NSProcessInfo::processInfo(nil);
                     msg_send![proc_info, operatingSystemVersion]
                 };
 
-                (version.major as u64, version.minor as u64, version.patch as u64)
+                (major as u64, minor as u64, patch as u64)
             };
             Some(version.into())
         }
