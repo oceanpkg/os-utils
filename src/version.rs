@@ -129,13 +129,6 @@ pub struct OsVersion {
     pub build: u64,
 }
 
-impl From<Version> for OsVersion {
-    #[inline]
-    fn from(Version { major, minor, patch }: Version) -> OsVersion {
-        OsVersion { major, minor, patch, ..Default::default() }
-    }
-}
-
 impl AsRef<Version> for OsVersion {
     #[inline]
     fn as_ref(&self) -> &Version {
