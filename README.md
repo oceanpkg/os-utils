@@ -1,4 +1,4 @@
-# OS Utils
+# OS Utils [![travis status](https://travis-ci.com/oceanpkg/os-utils.svg?branch=master)](https://travis-ci.com/oceanpkg/os-utils)
 
 This library provides utilities for querying information from the host operating
 system using [`Rust`](https://www.rust-lang.org).
