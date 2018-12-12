@@ -61,7 +61,14 @@ impl OsInfo {
 
     #[cfg(target_os = "windows")]
     fn _get() -> OsInfo {
-        unimplemented!()
+        let version = OsVersion::get();
+        let release = version.and_then(os::OsRelease::new);
+        OsInfo {
+            meta: OsMeta::Windows {
+                release,
+            },
+            version,
+        }
     }
 
     #[cfg(target_os = "linux")]
