@@ -1,7 +1,7 @@
 //! Utilities for querying OS information, such as version, name, and other
 //! things.
 
-use version::Version;
+use version::OsVersion;
 
 pub mod os;
 
@@ -43,13 +43,13 @@ pub struct OsInfo {
     /// Metadata for the host OS.
     pub meta: OsMeta,
     /// The operating system version.
-    pub version: Option<Version>,
+    pub version: Option<OsVersion>,
 }
 
 impl OsInfo {
     #[cfg(target_os = "macos")]
     fn _get() -> OsInfo {
-        let version = Version::macos();
+        let version = OsVersion::get();
         let release = version.and_then(os::OsRelease::new);
         OsInfo {
             meta: OsMeta::MacOs {

@@ -55,6 +55,13 @@ impl From<u64> for Version {
     }
 }
 
+impl From<OsVersion> for Version {
+    #[inline]
+    fn from(version: OsVersion) -> Version {
+        *version.as_version()
+    }
+}
+
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
@@ -93,54 +100,6 @@ impl FromStr for Version {
 }
 
 impl Version {
-    /// Queries the current macOS version.
-    pub fn macos() -> Option<Version> {
-        #[cfg(not(target_os = "macos"))]
-        { None }
-
-        #[cfg(target_os = "macos")]
-        {
-            use cocoa::appkit::*;
-            use cocoa::base::nil;
-            use cocoa::foundation::{NSInteger, NSProcessInfo};
-
-            let version = unsafe { NSAppKitVersionNumber };
-
-            let version = if version < NSAppKitVersionNumber10_7 {
-                return None;
-            } else if version < NSAppKitVersionNumber10_7_2 {
-                (10, 7, 0)
-            } else if version < NSAppKitVersionNumber10_7_3 {
-                (10, 7, 2)
-            } else if version < NSAppKitVersionNumber10_7_4 {
-                (10, 7, 3)
-            } else if version < NSAppKitVersionNumber10_8 {
-                (10, 7, 4)
-            } else if version < NSAppKitVersionNumber10_9 {
-                (10, 8, 0)
-            } else if version < NSAppKitVersionNumber10_10 {
-                (10, 9, 0)
-            } else {
-                // https://developer.apple.com/documentation/foundation/nsoperatingsystemversion?language=objc
-                #[repr(C)]
-                struct NSOperatingSystemVersion {
-                    major: NSInteger,
-                    minor: NSInteger,
-                    patch: NSInteger,
-                }
-
-                // Available in Obj-C as of macOS 10.10+
-                let NSOperatingSystemVersion { major, minor, patch } = unsafe {
-                    let proc_info = NSProcessInfo::processInfo(nil);
-                    msg_send![proc_info, operatingSystemVersion]
-                };
-
-                (major as u64, minor as u64, patch as u64)
-            };
-            Some(version.into())
-        }
-    }
-
     /// Creates a new instance from the three values.
     #[inline]
     pub fn new(major: u64, minor: u64, patch: u64) -> Version {
@@ -151,6 +110,132 @@ impl Version {
     #[inline]
     pub fn parse(version: &str) -> Result<Version, ParseVersionError> {
         version.parse()
+    }
+}
+
+/// A `MAJOR.MINOR.PATCH` version with extras for the current operating system.
+#[derive(Clone, Copy, Debug, Default, PartialOrd, Ord, PartialEq, Eq, Hash)]
+#[repr(C)]
+pub struct OsVersion {
+    /// The `x.0.0` version number.
+    pub major: u64,
+    /// The `0.y.0` version number.
+    pub minor: u64,
+    /// The `0.0.z` version number.
+    pub patch: u64,
+
+    /// The build number.
+    #[cfg(target_os = "windows")]
+    pub build: u64,
+}
+
+impl From<Version> for OsVersion {
+    #[inline]
+    fn from(Version { major, minor, patch }: Version) -> OsVersion {
+        OsVersion { major, minor, patch, ..Default::default() }
+    }
+}
+
+impl AsRef<Version> for OsVersion {
+    #[inline]
+    fn as_ref(&self) -> &Version {
+        self.as_version()
+    }
+}
+
+impl AsMut<Version> for OsVersion {
+    #[inline]
+    fn as_mut(&mut self) -> &mut Version {
+        self.as_version_mut()
+    }
+}
+
+impl OsVersion {
+    #[cfg(target_os = "macos")]
+    fn _get() -> Option<Self> {
+        use cocoa::appkit::*;
+        use cocoa::base::nil;
+        use cocoa::foundation::{NSInteger, NSProcessInfo};
+
+        let version = unsafe { NSAppKitVersionNumber };
+
+        let (major, minor, patch) = if version < NSAppKitVersionNumber10_7 {
+            return None;
+        } else if version < NSAppKitVersionNumber10_7_2 {
+            (10, 7, 0)
+        } else if version < NSAppKitVersionNumber10_7_3 {
+            (10, 7, 2)
+        } else if version < NSAppKitVersionNumber10_7_4 {
+            (10, 7, 3)
+        } else if version < NSAppKitVersionNumber10_8 {
+            (10, 7, 4)
+        } else if version < NSAppKitVersionNumber10_9 {
+            (10, 8, 0)
+        } else if version < NSAppKitVersionNumber10_10 {
+            (10, 9, 0)
+        } else {
+            // https://developer.apple.com/documentation/foundation/nsoperatingsystemversion?language=objc
+            #[repr(C)]
+            struct NSOperatingSystemVersion {
+                major: NSInteger,
+                minor: NSInteger,
+                patch: NSInteger,
+            }
+
+            // Available in Obj-C as of macOS 10.10+
+            let NSOperatingSystemVersion { major, minor, patch } = unsafe {
+                let proc_info = NSProcessInfo::processInfo(nil);
+                msg_send![proc_info, operatingSystemVersion]
+            };
+
+            (major as u64, minor as u64, patch as u64)
+        };
+        Some(OsVersion { major, minor, patch })
+    }
+
+    #[cfg(target_os = "windows")]
+    fn _get() -> Option<Self> {
+        use std::mem;
+        use winapi::um::{
+            sysinfoapi::GetVersionExA,
+            winnt::OSVERSIONINFOA,
+        };
+        unsafe {
+            let mut info = mem::zeroed::<OSVERSIONINFOA>();
+            info.dwOSVersionInfoSize = mem::size_of_val(&info) as _;
+            if GetVersionExA(&mut info) == 0 {
+                None
+            } else {
+                Some(OsVersion {
+                    major: info.dwMajorVersion as u64,
+                    minor: info.dwMinorVersion as u64,
+                    patch: 0,
+                    build: info.dwBuildNumber as u64,
+                })
+            }
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    fn _get() -> Option<Self> {
+        None
+    }
+
+    /// Queries the current operating system version.
+    pub fn get() -> Option<Self> {
+        Self::_get()
+    }
+
+    /// Returns a shared reference to `self` as a `Version`.
+    #[inline]
+    pub fn as_version(&self) -> &Version {
+        unsafe { &*(self as *const OsVersion as *const Version) }
+    }
+
+    /// Returns a mutable reference to `self` as a `Version`.
+    #[inline]
+    pub fn as_version_mut(&mut self) -> &mut Version {
+        unsafe { &mut *(self as *mut OsVersion as *mut Version) }
     }
 }
 
