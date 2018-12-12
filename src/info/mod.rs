@@ -73,7 +73,11 @@ impl OsInfo {
 
     #[cfg(target_os = "linux")]
     fn _get() -> OsInfo {
-        unimplemented!()
+        let version = OsVersion::get();
+        OsInfo {
+            meta: OsMeta::UnknownLinux,
+            version,
+        }
     }
 
     /// Queries information about the host operating system.
