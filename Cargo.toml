@@ -1,0 +1,16 @@
+[package]
+name          = "os_utils"
+version       = "0.1.0"
+authors       = ["The Ocean Project Developers"]
+license       = "MIT/Apache-2.0"
+readme        = "README.md"
+homepage      = "https://github.com/oceanpkg/os-utils"
+repository    = "https://github.com/oceanpkg/os-utils"
+documentation = "https://docs.rs/os_utils/"
+keywords      = ["os", "util", "version", "info"]
+categories    = ["os"]
+description   = "Utilities for querying information about the host operating system."
+include       = ["Cargo.toml", "src/**/*.rs", "README.md", "CHANGELOG.md", "LICENSE*"]
+
+[dependencies]
+cfg-if = "0.1"
