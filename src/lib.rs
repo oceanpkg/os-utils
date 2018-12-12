@@ -6,6 +6,14 @@
 #[macro_use]
 extern crate cfg_if;
 
+cfg_if! {
+    if #[cfg(target_os = "macos")] {
+        extern crate cocoa;
+        #[macro_use]
+        extern crate objc;
+    }
+}
+
 pub mod version;
 pub mod info;
 

@@ -93,6 +93,54 @@ impl FromStr for Version {
 }
 
 impl Version {
+    /// Queries the current macOS version.
+    pub fn macos() -> Option<Version> {
+        #[cfg(not(target_os = "macos"))]
+        { None }
+
+        #[cfg(target_os = "macos")]
+        {
+            use cocoa::appkit::*;
+            use cocoa::base::nil;
+            use cocoa::foundation::{NSInteger, NSProcessInfo};
+
+            let version = unsafe { NSAppKitVersionNumber };
+
+            let version = if version < NSAppKitVersionNumber10_7 {
+                return None;
+            } else if version < NSAppKitVersionNumber10_7_2 {
+                (10, 7, 0)
+            } else if version < NSAppKitVersionNumber10_7_3 {
+                (10, 7, 2)
+            } else if version < NSAppKitVersionNumber10_7_4 {
+                (10, 7, 3)
+            } else if version < NSAppKitVersionNumber10_8 {
+                (10, 7, 4)
+            } else if version < NSAppKitVersionNumber10_9 {
+                (10, 8, 0)
+            } else if version < NSAppKitVersionNumber10_10 {
+                (10, 9, 0)
+            } else {
+                // https://developer.apple.com/documentation/foundation/nsoperatingsystemversion?language=objc
+                #[repr(C)]
+                struct NSOperatingSystemVersion {
+                    major: NSInteger,
+                    minor: NSInteger,
+                    patch: NSInteger,
+                }
+
+                // Available in Obj-C as of macOS 10.10+
+                let version: NSOperatingSystemVersion = unsafe {
+                    let proc_info = NSProcessInfo::processInfo(nil);
+                    msg_send![proc_info, operatingSystemVersion]
+                };
+
+                (version.major as u64, version.minor as u64, version.patch as u64)
+            };
+            Some(version.into())
+        }
+    }
+
     /// Creates a new instance from the three values.
     #[inline]
     pub fn new(major: u64, minor: u64, patch: u64) -> Version {

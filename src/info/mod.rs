@@ -47,9 +47,31 @@ pub struct OsInfo {
 }
 
 impl OsInfo {
+    #[cfg(target_os = "macos")]
+    fn _get() -> OsInfo {
+        let version = Version::macos();
+        let release = version.and_then(os::OsRelease::new);
+        OsInfo {
+            meta: OsMeta::MacOs {
+                release,
+            },
+            version,
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    fn _get() -> OsInfo {
+        unimplemented!()
+    }
+
+    #[cfg(target_os = "linux")]
+    fn _get() -> OsInfo {
+        unimplemented!()
+    }
+
     /// Queries information about the host operating system.
     pub fn get() -> OsInfo {
-        unimplemented!()
+        OsInfo::_get()
     }
 
     /// Returns the string representation of the operating system's release
@@ -67,6 +89,26 @@ impl OsInfo {
             OsMeta::MacOs { release, .. } => release.map(Into::into),
             #[cfg(target_os = "windows")]
             OsMeta::Windows { release, .. } => release.map(Into::into),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_os_info() {
+        let info = OsInfo::get();
+
+        #[cfg(target_os = "macos")]
+        {
+            assert!(info.version.is_some());
+            match info.meta {
+                OsMeta::MacOs { release, .. } => {
+                    assert!(release.is_some());
+                },
+            }
         }
     }
 }

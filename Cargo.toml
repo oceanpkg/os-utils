@@ -14,3 +14,7 @@ include       = ["Cargo.toml", "src/**/*.rs", "README.md", "CHANGELOG.md", "LICE
 
 [dependencies]
 cfg-if = "0.1"
+
+[target.'cfg(target_os="macos")'.dependencies]
+cocoa = "0.18"
+objc = "0.2"
