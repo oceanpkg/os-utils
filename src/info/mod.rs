@@ -75,7 +75,7 @@ impl OsInfo {
     fn _get() -> OsInfo {
         let version = OsVersion::get();
         OsInfo {
-            meta: OsMeta::UnknownLinux,
+            meta: OsMeta::UnknownLinux {},
             version,
         }
     }
