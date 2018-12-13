@@ -25,6 +25,13 @@ pub enum OsMeta {
         release: Option<os::OsRelease>
     },
 
+    /// Debian Linux.
+    #[cfg(target_os = "linux")]
+    Debian {
+        /// The Debian release name, if known.
+        release: Option<os::debian::OsRelease>
+    },
+
     /// Ubuntu Linux.
     #[cfg(target_os = "linux")]
     Ubuntu {
