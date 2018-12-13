@@ -166,6 +166,20 @@ impl OsRelease {
             _NonExhaustive   => unsafe { std::hint::unreachable_unchecked() },
         }.into()
     }
+
+    /// Returns whether `self` is a Long Term Support (LTS) release.
+    #[inline]
+    pub fn is_lts(self) -> bool {
+        match self {
+            HardyHeron      |
+            LucidLynx       |
+            PrecisePangolin |
+            TrustyTahr      |
+            XenialXerus     |
+            BionicBeaver => true,
+            _ => false,
+        }
+    }
 }
 
 impl From<OsRelease> for Version {
