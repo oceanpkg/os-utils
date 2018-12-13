@@ -44,6 +44,27 @@ pub enum OsMeta {
     UnknownLinux {},
 }
 
+impl OsMeta {
+    /// Returns the string representation of the operating system's release
+    /// version name, if one is known.
+    pub fn release_name(&self) -> Option<&'static str> {
+        #[cfg(target_os = "linux")]
+        match self {
+            OsMeta::Ubuntu { release, .. } => release.map(Into::into),
+            OsMeta::Debian { release, .. } => release.map(Into::into),
+            OsMeta::UnknownLinux { .. } => None,
+        }
+
+        #[cfg(not(target_os = "linux"))]
+        match self {
+            #[cfg(target_os = "macos")]
+            OsMeta::MacOs { release, .. } => release.map(Into::into),
+            #[cfg(target_os = "windows")]
+            OsMeta::Windows { release, .. } => release.map(Into::into),
+        }
+    }
+}
+
 /// Information about the host operating system.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OsInfo {
@@ -90,25 +111,6 @@ impl OsInfo {
     /// Queries information about the host operating system.
     pub fn get() -> OsInfo {
         OsInfo::_get()
-    }
-
-    /// Returns the string representation of the operating system's release
-    /// version name, if one is known.
-    pub fn release_name_str(&self) -> Option<&'static str> {
-        #[cfg(target_os = "linux")]
-        match self.meta {
-            OsMeta::Ubuntu { release, .. } => release.map(Into::into),
-            OsMeta::Debian { release, .. } => release.map(Into::into),
-            OsMeta::UnknownLinux { .. } => None,
-        }
-
-        #[cfg(not(target_os = "linux"))]
-        match self.meta {
-            #[cfg(target_os = "macos")]
-            OsMeta::MacOs { release, .. } => release.map(Into::into),
-            #[cfg(target_os = "windows")]
-            OsMeta::Windows { release, .. } => release.map(Into::into),
-        }
     }
 }
 
