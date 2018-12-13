@@ -98,6 +98,7 @@ impl OsInfo {
         #[cfg(target_os = "linux")]
         match self.meta {
             OsMeta::Ubuntu { release, .. } => release.map(Into::into),
+            OsMeta::Debian { release, .. } => release.map(Into::into),
             OsMeta::UnknownLinux { .. } => None,
         }
 

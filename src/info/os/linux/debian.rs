@@ -41,6 +41,28 @@ pub enum OsRelease {
     _NonExhaustive,
 }
 
+impl<'a> From<OsRelease> for &'a str {
+    fn from(release: OsRelease) -> Self {
+        match release {
+            Buzz           => "Buzz",
+            Rex            => "Rex",
+            Bo             => "Bo",
+            Hamm           => "Hamm",
+            Slink          => "Slink",
+            Potato         => "Potato",
+            Woody          => "Woody",
+            Sarge          => "Sarge",
+            Etch           => "Etch",
+            Lenny          => "Lenny",
+            Squeeze        => "Squeeze",
+            Wheezy         => "Wheezy",
+            Jessie         => "Jessie",
+            Stretch        => "Stretch",
+            _NonExhaustive => unsafe { std::hint::unreachable_unchecked() },
+        }
+    }
+}
+
 impl OsRelease {
     /// The minimum supported OS release.
     pub const MIN: OsRelease = Buzz;
