@@ -1,10 +1,22 @@
 use std::mem;
-use version::Version;
 
+use info::{OsInfo, OsMeta};
+use version::{Version, OsVersion};
 use self::OsRelease::*;
 
 const MIN_MINOR_VERSION: u64 = 7; // Lion
 const MAX_MINOR_VERSION: u64 = MIN_MINOR_VERSION + OsRelease::LATEST as u64;
+
+pub(crate) fn get_info() -> OsInfo {
+    let version = OsVersion::get();
+    let release = version.and_then(OsRelease::new);
+    OsInfo {
+        meta: OsMeta::MacOs {
+            release,
+        },
+        version,
+    }
+}
 
 /// The release name of a known macOS version.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

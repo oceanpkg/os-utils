@@ -1,4 +1,17 @@
-use version::Version;
+use info::{OsInfo, OsMeta};
+use version::{Version, OsVersion};
+use self::OsRelease::*;
+
+pub(crate) fn get_info() -> OsInfo {
+    let version = OsVersion::get();
+    let release = version.and_then(OsRelease::new);
+    OsInfo {
+        meta: OsMeta::MacOs {
+            release,
+        },
+        version,
+    }
+}
 
 /// The release name of a known Windows version.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
